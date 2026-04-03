@@ -1,35 +1,37 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "eu.ansvar/cypriot-financial-regulation-mcp",
-  "description": "Query CySEC directives and circulars, CBC prudential directives, and enforcement actions for Cyprus-regulated entities",
+  "description": "CySEC and CBC (Central Bank of Cyprus) financial regulation MCP server — directives, circulars, and prudential regulations",
   "repository": {
     "url": "https://github.com/Ansvar-Systems/cypriot-financial-regulation-mcp",
     "source": "github"
   },
   "homepage": "https://ansvar.eu",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "keywords": [
-    "cysec",
-    "cbc",
-    "cypriot-financial-regulation",
-    "aif-managers",
-    "investment-firms",
-    "mifid",
-    "client-money",
+    "financial regulation",
+    "cyprus",
+    "regulation",
     "compliance",
-    "enforcement",
-    "mcp",
-    "ansvar",
-    "cyprus"
+    "mcp"
   ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@ansvar/cypriot-financial-regulation-mcp",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
+      }
+    },
+    {
+      "registryType": "npm",
+      "identifier": "@ansvar/cypriot-financial-regulation-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "streamable-http",
+        "url": "https://mcp.ansvar.eu/cypriot-financial-regulation/mcp"
       }
     }
   ]

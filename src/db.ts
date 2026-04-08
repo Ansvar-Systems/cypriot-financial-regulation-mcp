@@ -10,8 +10,8 @@
  */
 
 import Database from "better-sqlite3";
-import { existsSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 const DB_PATH = process.env["CYSEC_DB_PATH"] ?? "data/cysec.db";
 
@@ -250,6 +250,43 @@ export function checkProvisionCurrency(reference: string): {
   }
 
   return { ...row, found: true };
+}
+
+// Data freshness
+
+export interface DataFreshness {
+  last_run: string | null;
+  row_counts: {
+    sourcebooks: number;
+    provisions: number;
+    enforcement_actions: number;
+  };
+}
+
+export function getDataFreshness(): DataFreshness {
+  const db = getDb();
+
+  let lastRun: string | null = null;
+  try {
+    const ingestStatePath = resolve("data/ingest-state.json");
+    const state = JSON.parse(readFileSync(ingestStatePath, "utf8")) as { lastRun?: string };
+    lastRun = state.lastRun ?? null;
+  } catch {
+    // ingest-state.json missing or unreadable
+  }
+
+  const sourcebookCount = (db.prepare("SELECT COUNT(*) as n FROM sourcebooks").get() as { n: number }).n;
+  const provisionCount = (db.prepare("SELECT COUNT(*) as n FROM provisions").get() as { n: number }).n;
+  const enforcementCount = (db.prepare("SELECT COUNT(*) as n FROM enforcement_actions").get() as { n: number }).n;
+
+  return {
+    last_run: lastRun,
+    row_counts: {
+      sourcebooks: sourcebookCount,
+      provisions: provisionCount,
+      enforcement_actions: enforcementCount,
+    },
+  };
 }
 
 // Enforcement queries

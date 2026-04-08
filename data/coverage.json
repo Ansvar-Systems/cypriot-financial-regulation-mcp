@@ -1,0 +1,32 @@
+{
+  "last_updated": "2026-04-05",
+  "sourcebooks": [
+    {
+      "id": "CYSEC_DIRECTIVES",
+      "name": "CySEC Directives",
+      "authority": "Cyprus Securities and Exchange Commission",
+      "url": "https://www.cysec.gov.cy/",
+      "description": "CySEC directives (DI series) covering investment firms, AIF managers, UCITS, market abuse, and other regulated activities.",
+      "coverage_status": "partial",
+      "notes": "Coverage reflects provisions successfully ingested from the CySEC website."
+    },
+    {
+      "id": "CYSEC_CIRCULARS",
+      "name": "CySEC Circulars",
+      "authority": "Cyprus Securities and Exchange Commission",
+      "url": "https://www.cysec.gov.cy/",
+      "description": "CySEC circulars (C series) providing guidance and interpretations to regulated entities.",
+      "coverage_status": "partial",
+      "notes": "Coverage reflects provisions successfully ingested from the CySEC website."
+    },
+    {
+      "id": "CBC_DIRECTIVES",
+      "name": "CBC Prudential Directives",
+      "authority": "Central Bank of Cyprus",
+      "url": "https://www.centralbank.cy/",
+      "description": "CBC prudential directives for credit institutions, payment service providers, and other entities supervised by the Central Bank of Cyprus.",
+      "coverage_status": "partial",
+      "notes": "Coverage reflects provisions successfully ingested from the CBC website."
+    }
+  ]
+}

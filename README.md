@@ -4,7 +4,6 @@
 
 [![npm version](https://badge.fury.io/js/%40ansvar%2Fcypriot-financial-regulation-mcp.svg)](https://www.npmjs.com/package/@ansvar/cypriot-financial-regulation-mcp)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![CI](https://github.com/Ansvar-Systems/cypriot-financial-regulation-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Ansvar-Systems/cypriot-financial-regulation-mcp/actions/workflows/ci.yml)
 
 Query Cypriot financial regulation data -- regulations, decisions, and requirements from CySEC (Cyprus Securities and Exchange Commission) -- directly from Claude, Cursor, or any MCP-compatible client.
 
@@ -90,16 +89,18 @@ npx @ansvar/cypriot-financial-regulation-mcp
 
 ---
 
-## Available Tools (6)
+## Available Tools (8)
 
 | Tool | Description |
 |------|-------------|
-| `cy_fin_search_regulations` | Full-text search across CySEC and CBC regulatory provisions. Returns matching directives, circulars, and prudential d... |
-| `cy_fin_get_regulation` | Get a specific CySEC or CBC provision by sourcebook and reference (e.g., sourcebook |
+| `cy_fin_search_regulations` | Full-text search across CySEC and CBC regulatory provisions. Returns matching directives, circulars, and prudential directives. |
+| `cy_fin_get_regulation` | Get a specific CySEC or CBC provision by sourcebook and reference (e.g., sourcebook `CYSEC_DIRECTIVES`, reference `DI87-01`). |
 | `cy_fin_list_sourcebooks` | List all CySEC and CBC sourcebook collections with their names and descriptions. |
-| `cy_fin_search_enforcement` | Search CySEC enforcement actions — fines, suspensions, licence revocations, and public reprimands against regulated e... |
+| `cy_fin_search_enforcement` | Search CySEC enforcement actions — fines, suspensions, licence revocations, and public reprimands against regulated entities. |
 | `cy_fin_check_currency` | Check whether a specific CySEC or CBC provision reference is currently in force. Returns status and effective date. |
 | `cy_fin_about` | Return metadata about this MCP server: version, data source, tool list. |
+| `cy_fin_list_sources` | List authoritative data sources (CySEC and CBC) with URLs, descriptions, and license information. |
+| `cy_fin_check_data_freshness` | Check data freshness: last ingest timestamp and row counts for all collections. |
 
 All tools return structured data with source references and timestamps.
 
@@ -117,7 +118,7 @@ All content is sourced from official Cypriot regulatory publications:
 - Freshness checks run via GitHub Actions workflows
 - Last-updated timestamps in tool responses indicate data age
 
-See `sources.yml` for full provenance metadata.
+See [COVERAGE.md](COVERAGE.md) and [TOOLS.md](TOOLS.md) for full provenance and tool documentation.
 
 ---
 
@@ -180,8 +181,8 @@ npx @anthropic/mcp-inspector node dist/index.js   # Test with MCP Inspector
 ### Data Management
 
 ```bash
-npm run build:db       # Rebuild SQLite database from seed data
-npm run check-updates  # Check for new regulatory data
+npm run seed     # Seed SQLite database with sample data
+npm run ingest   # Run full ingest from CySEC/CBC websites
 ```
 
 ---
@@ -218,7 +219,7 @@ Apache License 2.0. See [LICENSE](./LICENSE) for details.
 
 ### Data Licenses
 
-Regulatory data sourced from official government publications. See `sources.yml` for per-source licensing details.
+Regulatory data sourced from official government publications. See [COVERAGE.md](COVERAGE.md) for per-source details.
 
 ---
 

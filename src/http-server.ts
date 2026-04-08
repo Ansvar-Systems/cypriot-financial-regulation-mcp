@@ -29,6 +29,7 @@ import {
   getProvision,
   searchEnforcement,
   checkProvisionCurrency,
+  getDataFreshness,
 } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,6 +47,25 @@ try {
 } catch {
   // fallback
 }
+
+let dataAge: string | null = null;
+try {
+  const ingestState = JSON.parse(
+    readFileSync(join(__dirname, "..", "data", "ingest-state.json"), "utf8"),
+  ) as { lastRun?: string };
+  dataAge = ingestState.lastRun ?? null;
+} catch {
+  // fallback
+}
+
+const META = {
+  disclaimer:
+    "This data is for informational purposes only. Verify all references against official CySEC and CBC publications before making compliance decisions.",
+  data_age: dataAge,
+  copyright:
+    "© Cyprus Securities and Exchange Commission (CySEC) / Central Bank of Cyprus (CBC). Official regulatory publications.",
+  source_url: "https://www.cysec.gov.cy/ and https://www.centralbank.cy/",
+};
 
 // Tool definitions
 
@@ -121,6 +141,18 @@ const TOOLS = [
     description: "Return metadata about this MCP server: version, data source, tool list.",
     inputSchema: { type: "object" as const, properties: {}, required: [] },
   },
+  {
+    name: "cy_fin_list_sources",
+    description:
+      "List the authoritative data sources used by this MCP server — CySEC and CBC — with URLs, descriptions, and license information.",
+    inputSchema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "cy_fin_check_data_freshness",
+    description:
+      "Check data freshness for this MCP server. Returns the last ingest timestamp and current row counts for all collections.",
+    inputSchema: { type: "object" as const, properties: {}, required: [] },
+  },
 ];
 
 // Zod schemas
@@ -163,8 +195,11 @@ function createMcpServer(): Server {
     const { name, arguments: args = {} } = request.params;
 
     function textContent(data: unknown) {
+      const payload = typeof data === "object" && data !== null
+        ? { ...(data as Record<string, unknown>), _meta: META }
+        : { data, _meta: META };
       return {
-        content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }],
       };
     }
 
@@ -229,6 +264,34 @@ function createMcpServer(): Server {
             data_source: "CySEC (https://www.cysec.gov.cy/) and CBC (https://www.centralbank.cy/)",
             tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
           });
+        }
+
+        case "cy_fin_list_sources": {
+          return textContent({
+            sources: [
+              {
+                id: "CYSEC",
+                name: "Cyprus Securities and Exchange Commission (CySEC)",
+                url: "https://www.cysec.gov.cy/",
+                description: "Official Cypriot financial markets regulator. Publishes directives, circulars, and enforcement decisions.",
+                license: "Official government publications — public domain for informational use.",
+                sourcebooks: ["CYSEC_DIRECTIVES", "CYSEC_CIRCULARS"],
+              },
+              {
+                id: "CBC",
+                name: "Central Bank of Cyprus (CBC)",
+                url: "https://www.centralbank.cy/",
+                description: "Central Bank of Cyprus. Publishes prudential directives for credit institutions and payment service providers.",
+                license: "Official government publications — public domain for informational use.",
+                sourcebooks: ["CBC_DIRECTIVES"],
+              },
+            ],
+          });
+        }
+
+        case "cy_fin_check_data_freshness": {
+          const freshness = getDataFreshness();
+          return textContent(freshness);
         }
 
         default:

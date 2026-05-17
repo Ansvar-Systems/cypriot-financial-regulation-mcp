@@ -27,7 +27,7 @@ import {
   checkProvisionCurrency,
   getDataFreshness,
 } from "./db.js";
-import { buildCitation } from "./citation.js";
+import { buildCitation, buildItemAttribution } from "./citation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -261,7 +261,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           status: parsed.status,
           limit: parsed.limit,
         });
-        return textContent({ results, count: results.length });
+        const resultsWithCitation = results.map((__r) => {
+          const __row = __r as unknown as Record<string, unknown>;
+          return {
+            ...__row,
+            _citation: buildItemAttribution(
+              __row["url"] != null ? String(__row["url"]) : (__row["source_url"] != null ? String(__row["source_url"]) : undefined),
+            ),
+          };
+        });
+        return textContent({ results: resultsWithCitation, count: resultsWithCitation.length });
       }
 
       case "cy_fin_get_regulation": {
@@ -286,7 +295,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "cy_fin_list_sourcebooks": {
         const sourcebooks = listSourcebooks();
-        return textContent({ sourcebooks, count: sourcebooks.length });
+        const sourcebooksWithCitation = sourcebooks.map((__r) => {
+          const __row = __r as unknown as Record<string, unknown>;
+          return {
+            ...__row,
+            _citation: buildItemAttribution(
+              __row["url"] != null ? String(__row["url"]) : (__row["source_url"] != null ? String(__row["source_url"]) : undefined),
+            ),
+          };
+        });
+        return textContent({ sourcebooks: sourcebooksWithCitation, count: sourcebooksWithCitation.length });
       }
 
       case "cy_fin_search_enforcement": {
@@ -296,7 +314,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           action_type: parsed.action_type,
           limit: parsed.limit,
         });
-        return textContent({ results, count: results.length });
+        const resultsWithCitation = results.map((__r) => {
+          const __row = __r as unknown as Record<string, unknown>;
+          return {
+            ...__row,
+            _citation: buildItemAttribution(
+              __row["url"] != null ? String(__row["url"]) : (__row["source_url"] != null ? String(__row["source_url"]) : undefined),
+            ),
+          };
+        });
+        return textContent({ results: resultsWithCitation, count: resultsWithCitation.length });
       }
 
       case "cy_fin_check_currency": {

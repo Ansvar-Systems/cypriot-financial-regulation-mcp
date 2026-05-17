@@ -2,11 +2,11 @@
   "name": "@ansvar/cypriot-financial-regulation-mcp",
   "version": "0.1.0",
   "mcpName": "eu.ansvar/cypriot-financial-regulation-mcp",
-  "description": "CySEC and CBC (Central Bank of Cyprus) financial regulation MCP server — directives, circulars, and prudential regulations",
+  "description": "CySEC and CBC (Central Bank of Cyprus) financial regulation MCP server \u2014 directives, circulars, and prudential regulations",
   "type": "module",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "cypriot-financial-regulation-mcp": "dist/src/index.js"
+    "cypriot-financial-regulation-mcp": "dist/index.js"
   },
   "files": [
     "dist",
@@ -41,11 +41,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/http-server.ts",
-    "start": "node dist/src/http-server.js",
+    "start": "node dist/http-server.js",
     "seed": "npx tsx scripts/seed-sample.ts",
     "ingest": "npx tsx scripts/ingest-cysec.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "ingest:fetch": "tsx scripts/ingest-fetch.ts",
+    "ingest:diff": "tsx scripts/ingest-diff.ts",
+    "coverage:update": "tsx scripts/update-coverage.ts",
+    "freshness:check": "tsx scripts/check-freshness.ts",
+    "coverage:verify": "tsx scripts/verify-coverage.ts",
+    "ingest:full": "npm run ingest:fetch && npm run build:db && npm run coverage:update",
+    "test:contract": "echo \"No contract tests yet\" && exit 0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",

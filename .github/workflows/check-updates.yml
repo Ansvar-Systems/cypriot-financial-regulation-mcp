@@ -1,0 +1,140 @@
+# =============================================================================
+# Check Data Updates — Monthly scheduled re-ingestion + closed-loop refresh
+# =============================================================================
+#
+# Runs `npm run ingest` against the CySEC source, and if the resulting
+# data/cysec.db differs from what was pre-ingest, uploads the gzipped DB to
+# GitHub Release v1.0.0 (database.db.gz, --clobber) and triggers
+# ghcr-build.yml. Watchtower on Hetzner picks up the new image on its next
+# poll (1h floor) and rotates prod containers.
+#
+# Closed-loop design — runs end-to-end without manual intervention:
+#   schedule fires
+#     -> npm run ingest pulls new content from cysec.gov.cy
+#     -> workflow compares pre/post DB hash
+#     -> if changed, gzip + gh release upload --clobber v1.0.0
+#     -> gh workflow run ghcr-build.yml
+#     -> ghcr-build re-bakes the image
+#     -> Watchtower pulls the new :latest SHA and recreates prod container
+#
+# Cyprus-PSI GREEN audit landed in PR Ansvar-Architecture-Documentation#640
+# (2026-05-17): commercial re-use of CySEC publications is permitted under
+# Cyprus Law 143(I)/2021 transposing EU Directive 2019/1024 Article 8.
+#
+# Security: all expression interpolations are routed through env: blocks
+# rather than inlined into shell. The only `${{ }}` references in run:
+# bodies are inside if: conditions evaluated by the runner, not by the shell.
+#
+# =============================================================================
+
+name: Check Data Updates
+
+on:
+  schedule:
+    # First Monday of each month at 06:00 UTC
+    - cron: "0 6 1-7 * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write    # gh release upload --clobber
+  actions: write     # gh workflow run ghcr-build.yml
+
+jobs:
+  check-updates:
+    name: Check for New CySEC Data
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Capture pre-ingest DB state
+        id: pre
+        run: |
+          if [ -f data/cysec.db ]; then
+            echo "hash=$(sha256sum data/cysec.db | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+            echo "size=$(stat -c%s data/cysec.db)" >> "$GITHUB_OUTPUT"
+          else
+            echo "hash=" >> "$GITHUB_OUTPUT"
+            echo "size=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run ingestion
+        run: npm run ingest
+        env:
+          CYSEC_DB_PATH: data/cysec.db
+
+      - name: Capture post-ingest DB state
+        id: post
+        env:
+          PRE_HASH: ${{ steps.pre.outputs.hash }}
+        run: |
+          if [ ! -f data/cysec.db ]; then
+            echo "DB missing after ingest — failing"
+            exit 1
+          fi
+          POST_HASH=$(sha256sum data/cysec.db | cut -d' ' -f1)
+          POST_SIZE=$(stat -c%s data/cysec.db)
+          echo "hash=$POST_HASH" >> "$GITHUB_OUTPUT"
+          echo "size=$POST_SIZE" >> "$GITHUB_OUTPUT"
+          if [ "$POST_HASH" != "$PRE_HASH" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload refreshed DB to release v1.0.0
+        if: steps.post.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRE_SIZE: ${{ steps.pre.outputs.size }}
+          POST_SIZE: ${{ steps.post.outputs.size }}
+        run: |
+          gzip -9 -c data/cysec.db > database.db.gz
+          gh release upload v1.0.0 database.db.gz --clobber
+          GZ_SIZE=$(stat -c%s database.db.gz)
+          echo "Uploaded ${GZ_SIZE} bytes (db was ${PRE_SIZE}, now ${POST_SIZE})"
+
+      - name: Trigger GHCR build
+        if: steps.post.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run ghcr-build.yml --ref main
+          echo "GHCR build triggered — Watchtower will rotate prod container on next poll"
+
+      - name: Summary
+        if: always()
+        env:
+          PRE_SIZE: ${{ steps.pre.outputs.size }}
+          POST_SIZE: ${{ steps.post.outputs.size }}
+          CHANGED: ${{ steps.post.outputs.changed }}
+        run: |
+          {
+            echo "## Data Freshness Check — CySEC"
+            echo ""
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| Source | CySEC (https://www.cysec.gov.cy/) |"
+            echo "| License | Cyprus-PSI (Law 143(I)/2021) |"
+            echo "| Run date | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+            echo "| Pre-ingest size | ${PRE_SIZE} bytes |"
+            echo "| Post-ingest size | ${POST_SIZE} bytes |"
+            echo "| Changed | ${CHANGED} |"
+            if [ "${CHANGED}" = "true" ]; then
+              echo "| Release asset | uploaded (database.db.gz, --clobber) |"
+              echo "| GHCR build | triggered |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

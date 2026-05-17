@@ -170,7 +170,17 @@ Apache License 2.0. See [LICENSE](./LICENSE) for details.
 
 ### Data Licenses
 
-Regulatory data sourced from official government publications. See [COVERAGE.md](COVERAGE.md) for per-source details.
+**License code:** `Cyprus-PSI` — statutory Cyprus public-sector information re-use regime.
+
+**Statutory basis:** Cyprus Law 143(I)/2021 transposes [EU Directive 2019/1024](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019L1024) on Open Data and the re-use of public sector information. Article 8 of the directive mandates commercial re-use of public-sector documents.
+
+The Cyprus Securities and Exchange Commission (CySEC) is a statutory authority established under the Securities and Exchange Commission Law 73(I)/2009 — a public-sector body within scope of Law 143(I)/2021. CySEC's [/en-GB/terms/](https://www.cysec.gov.cy/en-GB/terms/) page contains e-commerce terms for the website's JCC payment-handling service, not a content re-use grant; the earlier `/en-GB/disclaimer/` returns HTTP 410. Licence basis is statutory PSI, not the website terms page.
+
+Commercial reuse, derivatives, and redistribution are permitted with attribution. See `sources.yml` for the anchored URL pattern and full provenance metadata; see `data/coverage.json` for corpus scope.
+
+**Coverage note:** ~415 sanctions visible upstream are not currently ingested. Reingestion targeting current URL paths (`/public-info/`, `/legal/`, `/sanctions/`) is a separate workstream and does not block this licence-axis declaration.
+
+Attribution: "Source: Cyprus Securities and Exchange Commission (CySEC). Reproduced under Cyprus public-sector information re-use regime (Law 143(I)/2021, transposing EU Directive 2019/1024)."
 
 ---
 
